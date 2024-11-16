@@ -1,8 +1,9 @@
 ﻿# Created By Adam Waszczyszak
+$host.ui.RawUI.WindowTitle = “MSShell by Adam Waszczyszak”
 # Scripts Disabled Bypass from CMD: powershell -ExecutionPolicy Bypass -File "C:\Temp\MSShell.ps1"
 
 # Self-check for admin rights, and ask for perms if launched not as admin (from Superuser.com)
-param([switch]$Elevated)
+#param([switch]$Elevated)
 
 function Test-Admin {
     $currentUser = New-Object Security.Principal.WindowsPrincipal $([Security.Principal.WindowsIdentity]::GetCurrent())
@@ -51,31 +52,34 @@ Function MenuMaker{
     $menu
 }
 
-MenuMaker -Selections 'Create Temp and Visitor_pics Folders',
-'Set Temp and Visitor_Pics Permissions', 
-'Set PTI Folder Permissions',
-'Block DYMO Updates', 
-'Block Adobe Auto-Update Service', 
-'Stop Print Spooler', 
-'Restart Print Spooler', 
-'Delete all print jobs on PC', 
-'Install Drivers via elevated path', 
-'Download and Install API', 
-'Download and Install Adobe', 
-'Download and Install Signature Pad', 
-'Download and Install HF Scanner (DS8101) + PDFs',
-'Download and Install HF Scanner (DS6707) + PDFs',
-'Download and Install LX 500 driver',
-'Download and Install DYMO 550 driver',
-'Download and Install DYMO 450 driver',
-'Download and Install GK420d driver',
-'Download and Install GC420d driver (download broken, use GK420d)',
-'Download and Install ZD421/420 driver',
-'Download and Install ZXP-7 driver',
-'Change API Port', 
-'Launch Print Server', 
-'Microsoft Edge Registry Patch (Edge Engine Error)', 
-'Create Download Links and set Clip Board' -Title 'Choose a Function' -IncludeExit
+# Function for the Menu creation
+function Print-Menu{
+    MenuMaker -Selections 'Create Temp and Visitor_pics Folders',
+    'Set Temp and Visitor_Pics Permissions', 
+    'Set PTI Folder Permissions',
+    'Block DYMO Updates', 
+    'Block Adobe Auto-Update Service', 
+    'Stop Print Spooler', 
+    'Restart Print Spooler', 
+    'Delete all print jobs on PC', 
+    'Install Drivers via elevated path', 
+    'Driver download and install menu',
+    'Change API Port', 
+    'Launch Print Server', 
+    'Microsoft Edge Registry Patch (Edge Engine Error)', 
+    'Create Download Links and set Clip Board',
+    'Delete existing badge PDF',
+    'Delete drivers from Temp',
+    'Disable Windows Updates' -Title 'Choose a Function' -IncludeExit
+}
+
+Print-Menu
+
+# Function to reset console per command
+function Console-Reset{
+    cls
+    Print-Menu
+}
 
 $MenuChoice = Read-Host "Choose an option"
 
@@ -88,6 +92,8 @@ while($MenuChoice -ne 'X'){
     }
 
     if($MenuChoice -eq 1){
+        
+        Console-Reset
            if (Test-Path -Path C:\Temp){
             "Temp Folder Already Exists"
         }
@@ -105,24 +111,25 @@ while($MenuChoice -ne 'X'){
             }
         }
 
-        if($MenuChoice -eq 2){         
+        if($MenuChoice -eq 2){     
             
-        $path=Get-Acl -Path C:\Temp
-        $acl=New-Object -TypeName System.Security.AccessControl.FileSystemAccessRule ('BUILTIN\Users','FullControl','ContainerInherit, ObjectInherit','None','Allow')
-        $path.setaccessrule($acl)
-        Set-Acl -Path C:\Temp\ -AclObject $path
+            Console-Reset    
+            $path=Get-Acl -Path C:\Temp
+            $acl=New-Object -TypeName System.Security.AccessControl.FileSystemAccessRule ('BUILTIN\Users','FullControl','ContainerInherit, ObjectInherit','None','Allow')
+            $path.setaccessrule($acl)
+            Set-Acl -Path C:\Temp\ -AclObject $path
 
 
-        $path=Get-Acl -Path C:\Visitor_pic
-        $acl=New-Object -TypeName System.Security.AccessControl.FileSystemAccessRule ('BUILTIN\Users','FullControl','ContainerInherit, ObjectInherit','None','Allow')
-        $path.setaccessrule($acl)
-        Set-Acl -Path C:\Visitor_pic\ -AclObject $path
+            $path=Get-Acl -Path C:\Visitor_pic
+            $acl=New-Object -TypeName System.Security.AccessControl.FileSystemAccessRule ('BUILTIN\Users','FullControl','ContainerInherit, ObjectInherit','None','Allow')
+            $path.setaccessrule($acl)
+            Set-Acl -Path C:\Visitor_pic\ -AclObject $path
 
-        "Permissions for Temp and Visitor_Pics Set!"
+            "Permissions for Temp and Visitor_Pics Set!"
     }
         
         if($MenuChoice -eq 3){ 
-
+            Console-Reset
             $path=Get-Acl -Path C:\ProgramData\PTI
             $acl=New-Object -TypeName System.Security.AccessControl.FileSystemAccessRule ('BUILTIN\Users','FullControl','ContainerInherit, ObjectInherit','None','Allow')
             $path.setaccessrule($acl)
@@ -131,58 +138,40 @@ while($MenuChoice -ne 'X'){
             "PTI Folder Permissions Set!"
     }
 
-#    if($MenuChoice -eq 4){
-#        Write-Output "Sending Test Print"
-#            $printerName = "Color Label 500" 
-#            Get-CimInstance Win32_Printer -Filter "name LIKE '%$printerName%'" |
-#                        Invoke-CimMethod -MethodName printtestpage
-#    }
-#
-#        if($MenuChoice -eq 5){
-#            Write-Output "Sending Test Print"
-#              $printerName = "DYMO LabelWriter 550 Turbo" 
-#             Get-CimInstance Win32_Printer -Filter "name LIKE '%$printerName%'" |
-#                       Invoke-CimMethod -MethodName printtestpage
-#    }
-#        if($MenuChoice -eq 6){
-#            Write-Output "Sending Test Print"
-#               $printerName = "Zebra ZXP Series 7 USB Card Printer" 
-#                Get-CimInstance Win32_Printer -Filter "name LIKE '%$printerName%'" |
-#                        Invoke-CimMethod -MethodName printtestpage
-#    }
         if($MenuChoice -eq 4){
+            Console-Reset
+            New-NetFirewallRule -Program "C:\Program Files (x86)\DYMO\DYMO Connect\DYMOConnect.exe" -Action Block -Profile Domain, Private, Public -DisplayName “Block DYMO Connect” -Description “Block DYMO Connect” -Direction Outbound | Format-Table -AutoSize -Property DisplayName, Enabled, Direction, Action  
 
-            New-NetFirewallRule -Program "C:\Program Files (x86)\DYMO\DYMO Connect\DYMOConnect.exe" -Action Block -Profile Domain, Private, Public -DisplayName “Block DYMO Connect” -Description “Block DYMO Connect” -Direction Outbound
-
-            New-NetFirewallRule -Program "C:\Program Files (x86)\DYMO\DYMO Connect\DYMO.WebApi.Win.Host.exe" -Action Block -Profile Domain, Private, Public -DisplayName “Block DYMO WebService” -Description “Block DYMO WebService” -Direction Outbound
-            "Services Blocked In Firewall"
+            New-NetFirewallRule -Program "C:\Program Files (x86)\DYMO\DYMO Connect\DYMO.WebApi.Win.Host.exe" -Action Block -Profile Domain, Private, Public -DisplayName “Block DYMO WebService” -Description “Block DYMO WebService” -Direction Outbound | Format-Table -AutoSize -Property DisplayName, Enabled, Direction, Action 
+            
+            "Services Blocked using the Firewall!"
         }
         if($MenuChoice -eq 5){
-        
-        Set-Service -Name "AdobeARMservice" -StartupType Disabled
+            Console-Reset
+            Set-Service -Name "AdobeARMservice" -StartupType Disabled
 
-        "Adobe Update Services Blocked In Services.msc"
+            "Adobe Update Services Blocked In Services.msc"
     }
         if($MenuChoice -eq 6){
-        
+            Console-Reset
             Stop-Service -Name Spooler
             'Print Spooler Service Stopped'
         }
 
         if($MenuChoice -eq 7){
-
+            Console-Reset
             Start-Service -Name Spooler
             'Print Spooler Service Started'
         }
 
         if($MenuChoice -eq 8){
-
+            Console-Reset
             Get-Printer | ForEach-Object { Remove-PrintJob -PrinterName $_.Name }
             'All print jobs deleted'
         }
 
         if($MenuChoice -eq 9){
-            
+            Console-Reset
             $local = Read-Host "Path to .exe"
             Start-Process -FilePath “$local”
             "Success!"
@@ -190,289 +179,313 @@ while($MenuChoice -ne 'X'){
         }
 
         if($MenuChoice -eq 10){
-            
-            'Parsing download site...'
-            
-            # Retrieve the HTML content of the website
-            $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/e2d06108-8cc8-4705-a316-54463dc1d78f"
-            # Extract the text content from the parsed HTML
-            $text = $response.ParsedHtml.body.innerText
+            cls
+            MenuMaker -Selections 'Download and Install API', 
+            'Download and Install Adobe', 
+            'Download and Install Signature Pad', 
+            'Download and Install HF Scanner (DS8101) + PDFs',
+            'Download and Install HF Scanner (DS6707) + PDFs',
+            'Download and Install LX 500 driver',
+            'Download and Install DYMO 550 driver',
+            'Download and Install DYMO 450 driver',
+            'Download and Install GK420d driver',
+            'Download and Install GC420d driver (download broken, use GK420d)',
+            'Download and Install ZD421/420 driver',
+            'Download and Install ZXP-7 driver' -Title 'Choose a Driver' -IncludeExit
 
-            'Downloading...'
+            $DownloadPick = Read-Host "Choose a download menu option"
+
+            while($DownloadPick -ne 'X'){
+
+            if($DownloadPick -eq 1){
+            
+                'Parsing download site...'
+            
+                # Retrieve the HTML content of the website
+                $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/e2d06108-8cc8-4705-a316-54463dc1d78f"
+                # Extract the text content from the parsed HTML
+                $text = $response.ParsedHtml.body.innerText
+
+                'Downloading...'
                    
-            $Destination = "C:\Temp\api.zip" 
-            Invoke-WebRequest -Uri $text -OutFile $Destination
-            'Uncompressing...'
-            Expand-Archive -LiteralPath 'C:\Temp\api.zip' -DestinationPath C:\Temp
-            "Launching API installer..."
-            Start-Process -FilePath "C:\Temp\MSShift.DevicesAPI.Setup.NEW.msi"
-            "Success!"
+                $Destination = "C:\Temp\api.zip" 
+                Invoke-WebRequest -Uri $text -OutFile $Destination
+                'Uncompressing...'
+                Expand-Archive -LiteralPath 'C:\Temp\api.zip' -DestinationPath C:\Temp
+                "Launching API installer..."
+                Start-Process -FilePath "C:\Temp\MSShift.DevicesAPI.Setup.NEW.msi"
+                "Success!"
+
+            }
+
+             if($DownloadPick -eq 2){
+            
+                'Parsing download site...'
+
+                # Retrieve the HTML content of the website
+                $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/5da99203-21ba-4aa2-93e6-a60a8a0b3ae3"
+                # Extract the text content from the parsed HTML
+                $text = $response.ParsedHtml.body.innerText
+            
+                'Downloading...'
+
+                $Destination = "C:\Temp\adobe.exe" 
+                Invoke-WebRequest -Uri $text -OutFile $Destination
+
+                "Launching Adobe installer..."
+                Start-Process -FilePath "C:\Temp\adobe.exe"
+                "Success!"
+
+        }
+
+            if($DownloadPick -eq 3){
+            
+                'Parsing download site...'
+
+                # Retrieve the HTML content of the website
+                $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/e43d957b-0b20-4422-a3d0-a114162c5dfe"
+                # Extract the text content from the parsed HTML
+                $text = $response.ParsedHtml.body.innerText
+            
+                'Downloading...'
+
+                $Destination = "C:\Temp\sigplus_.exe" 
+                Invoke-WebRequest -Uri $text -OutFile $Destination
+
+                "Launching Signature Pad installer..."
+                Start-Process -FilePath "C:\Temp\sigplus_.exe"
+                "Success!"
+
+            }
+            if($DownloadPick -eq 4){
+            
+                'Parsing download site...'
+                # Download HF driver
+                # Retrieve the HTML content of the website
+                $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/30ce8450-e037-4228-8987-432968180d43"
+                # Extract the text content from the parsed HTML
+                $text = $response.ParsedHtml.body.innerText
+            
+                'Downloading driver...'
+
+                $Destination = "C:\Temp\Zebra_CoreScanner_Driver.exe" 
+                Invoke-WebRequest -Uri $text -OutFile $Destination
+
+                #Downloading PDF's
+                # Retrieve the HTML content of the website
+                $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/76cdef97-2774-4b11-9adb-14b0220159f5"
+                # Extract the text content from the parsed HTML
+                $text = $response.ParsedHtml.body.innerText
+            
+                'Downloading Restore Default PDF...'
+
+                $Destination = "C:\Temp\Restore Default.pdf" 
+                Invoke-WebRequest -Uri $text -OutFile $Destination
+
+                # Retrieve the HTML content of the website
+                $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/e5a5d996-6a66-400b-a2c7-548627642815"
+                # Extract the text content from the parsed HTML
+                $text = $response.ParsedHtml.body.innerText
+            
+                'Downloading ScanX_Config_Codebar PDF...'
+
+                $Destination = "C:\Temp\ScanX_Config_Codebar.pdf" 
+                Invoke-WebRequest -Uri $text -OutFile $Destination
+
+                "Launching Hands Free Scanner installer..."
+                Start-Process -FilePath "C:\Temp\Zebra_CoreScanner_Driver.exe"
+                "Success!"
+
+            }
+
+            if($DownloadPick -eq 5){
+            
+                'Parsing download site...'
+                # Download HF driver
+                # Retrieve the HTML content of the website
+                $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/be6e546f-2bff-4547-ad52-a13442f9a53f"
+                # Extract the text content from the parsed HTML
+                $text = $response.ParsedHtml.body.innerText
+            
+                'Downloading driver...'
+
+                $Destination = "C:\Temp\Zebra123_CoreScanner_Driver.exe" 
+                Invoke-WebRequest -Uri $text -OutFile $Destination
+
+                #Downloading PDF's
+                # Retrieve the HTML content of the website
+                $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/76cdef97-2774-4b11-9adb-14b0220159f5"
+                # Extract the text content from the parsed HTML
+                $text = $response.ParsedHtml.body.innerText
+            
+                'Downloading Restore Default PDF...'
+
+                $Destination = "C:\Temp\Restore Default.pdf" 
+                Invoke-WebRequest -Uri $text -OutFile $Destination
+
+                # Retrieve the HTML content of the website
+                $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/e5a5d996-6a66-400b-a2c7-548627642815"
+                # Extract the text content from the parsed HTML
+                $text = $response.ParsedHtml.body.innerText
+            
+                'Downloading ScanX_Config_Codebar PDF...'
+
+                $Destination = "C:\Temp\ScanX_Config_Codebar.pdf" 
+                Invoke-WebRequest -Uri $text -OutFile $Destination
+
+                "Launching Hands Free Scanner installer..."
+                Start-Process -FilePath "C:\Temp\Zebra123_CoreScanner_Driver.exe"
+                "Success!"
+
+            }
+
+            if($DownloadPick -eq 6){
+            
+                'Parsing download site...'
+
+                # Retrieve the HTML content of the website
+                $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/7ebdd547-4c3c-4dc4-8639-e0ce88c1f60c"
+                # Extract the text content from the parsed HTML
+                $text = $response.ParsedHtml.body.innerText
+            
+                'Downloading...'
+
+                $Destination = "C:\Temp\Primera.2.3.1.exe" 
+                Invoke-WebRequest -Uri $text -OutFile $Destination
+
+                "Launching LX 500 installer..."
+                Start-Process -FilePath "C:\Temp\Primera.2.3.1.exe"
+                "Success!"
+
+            }
+            if($DownloadPick -eq 7){
+            
+                'Parsing download site...'
+
+                # Retrieve the HTML content of the website
+                $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/1ab37806-4228-4eb1-8178-1ba492b0ea0f"
+                # Extract the text content from the parsed HTML
+                $text = $response.ParsedHtml.body.innerText
+            
+                'Downloading...'
+
+                $Destination = "C:\Temp\DCDSetup1.4.5.1.exe" 
+                Invoke-WebRequest -Uri $text -OutFile $Destination
+
+                "Launching DYMO 550 driver installer..."
+                Start-Process -FilePath "C:\Temp\DCDSetup1.4.5.1.exe"
+                "Success!"
+
+            }
+
+            if($DownloadPick -eq 8){
+            
+                'Parsing download site...'
+
+                # Retrieve the HTML content of the website
+                $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/2f89909d-4539-446b-a76c-1ff7f47954aa"
+                # Extract the text content from the parsed HTML
+                $text = $response.ParsedHtml.body.innerText
+            
+                'Downloading...'
+
+                $Destination = "C:\Temp\DCDSetup1.3.2.18.exe" 
+                Invoke-WebRequest -Uri $text -OutFile $Destination
+
+                "Launching DYMO 450 driver installer..."
+                Start-Process -FilePath "C:\Temp\DCDSetup1.3.2.18.exe"
+                "Success!"
+
+            }
+
+            if($DownloadPick -eq 9){
+            
+                'Parsing download site...'
+
+                # Retrieve the HTML content of the website
+                $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/2923c379-b7a0-4506-9c28-4ea5b2c0e48c"
+                # Extract the text content from the parsed HTML
+                $text = $response.ParsedHtml.body.innerText
+            
+                'Downloading...'
+
+                $Destination = "C:\Temp\zd51.exe" 
+                Invoke-WebRequest -Uri $text -OutFile $Destination
+
+                "Launching GK420d driver installer..."
+                Start-Process -FilePath "C:\Temp\zd51.exe"
+                "Success!"
+
+            }
+
+            if($DownloadPick -eq 10){
+            
+                'Parsing download site...'
+
+                # Retrieve the HTML content of the website
+                $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/56bbaadf-adb3-4a2b-875b-68dac3bb2489"
+                # Extract the text content from the parsed HTML
+                $text = $response.ParsedHtml.body.innerText
+            
+                'Downloading...'
+
+                $Destination = "C:\Temp\zd.exe" 
+                Invoke-WebRequest -Uri $text -OutFile $Destination
+
+                "Launching GC420d driver installer..."
+                Start-Process -FilePath "C:\Temp\zd.exe"
+                "Success!"
+
+            }
+
+            if($DownloadPick -eq 11){
+            
+                'Parsing download site...'
+
+                # Retrieve the HTML content of the website
+                $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/75b8f783-51f0-4a8a-9128-bf6957480aa4"
+                # Extract the text content from the parsed HTML
+                $text = $response.ParsedHtml.body.innerText
+            
+                'Downloading...'
+
+                $Destination = "C:\Temp\zd105.exe" 
+                Invoke-WebRequest -Uri $text -OutFile $Destination
+
+                "Launching ZD421/420 driver installer..."
+                Start-Process -FilePath "C:\Temp\zd105.exe"
+                "Success!"
+
+            }
+
+            if($DownloadPick -eq 12){
+            
+                'Parsing download site...'
+
+                # Retrieve the HTML content of the website
+                $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/7cc7f865-5107-4f8b-9f3e-617b8ca23802"
+                # Extract the text content from the parsed HTML
+                $text = $response.ParsedHtml.body.innerText
+            
+                'Downloading...'
+
+                $Destination = "C:\Temp\ZXP73.0.2.exe" 
+                Invoke-WebRequest -Uri $text -OutFile $Destination
+
+                "Launching ZXP-7 driver installer..."
+                Start-Process -FilePath "C:\Temp\ZXP73.0.2.exe"
+                "Success!"
+
+            }
+
+            $DownloadPick = Read-Host "Choose another download menu option" 
+                
+            }
 
         }
 
         if($MenuChoice -eq 11){
-            
-            'Parsing download site...'
-
-            # Retrieve the HTML content of the website
-            $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/5da99203-21ba-4aa2-93e6-a60a8a0b3ae3"
-            # Extract the text content from the parsed HTML
-            $text = $response.ParsedHtml.body.innerText
-            
-            'Downloading...'
-
-            $Destination = "C:\Temp\adobe.exe" 
-            Invoke-WebRequest -Uri $text -OutFile $Destination
-
-            "Launching Adobe installer..."
-            Start-Process -FilePath "C:\Temp\adobe.exe"
-            "Success!"
-
-        }
-
-        if($MenuChoice -eq 12){
-            
-            'Parsing download site...'
-
-            # Retrieve the HTML content of the website
-            $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/e43d957b-0b20-4422-a3d0-a114162c5dfe"
-            # Extract the text content from the parsed HTML
-            $text = $response.ParsedHtml.body.innerText
-            
-            'Downloading...'
-
-            $Destination = "C:\Temp\sigplus_.exe" 
-            Invoke-WebRequest -Uri $text -OutFile $Destination
-
-            "Launching Signature Pad installer..."
-            Start-Process -FilePath "C:\Temp\sigplus_.exe"
-            "Success!"
-
-        }
-
-        if($MenuChoice -eq 13){
-            
-            'Parsing download site...'
-            # Download HF driver
-            # Retrieve the HTML content of the website
-            $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/30ce8450-e037-4228-8987-432968180d43"
-            # Extract the text content from the parsed HTML
-            $text = $response.ParsedHtml.body.innerText
-            
-            'Downloading driver...'
-
-            $Destination = "C:\Temp\Zebra_CoreScanner_Driver.exe" 
-            Invoke-WebRequest -Uri $text -OutFile $Destination
-
-            #Downloading PDF's
-            # Retrieve the HTML content of the website
-            $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/76cdef97-2774-4b11-9adb-14b0220159f5"
-            # Extract the text content from the parsed HTML
-            $text = $response.ParsedHtml.body.innerText
-            
-            'Downloading Restore Default PDF...'
-
-            $Destination = "C:\Temp\Restore Default.pdf" 
-            Invoke-WebRequest -Uri $text -OutFile $Destination
-
-            # Retrieve the HTML content of the website
-            $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/e5a5d996-6a66-400b-a2c7-548627642815"
-            # Extract the text content from the parsed HTML
-            $text = $response.ParsedHtml.body.innerText
-            
-            'Downloading ScanX_Config_Codebar PDF...'
-
-            $Destination = "C:\Temp\ScanX_Config_Codebar.pdf" 
-            Invoke-WebRequest -Uri $text -OutFile $Destination
-
-            "Launching Hands Free Scanner installer..."
-            Start-Process -FilePath "C:\Temp\Zebra_CoreScanner_Driver.exe"
-            "Success!"
-
-        }
-
-        if($MenuChoice -eq 14){
-            
-            'Parsing download site...'
-            # Download HF driver
-            # Retrieve the HTML content of the website
-            $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/be6e546f-2bff-4547-ad52-a13442f9a53f"
-            # Extract the text content from the parsed HTML
-            $text = $response.ParsedHtml.body.innerText
-            
-            'Downloading driver...'
-
-            $Destination = "C:\Temp\Zebra123_CoreScanner_Driver.exe" 
-            Invoke-WebRequest -Uri $text -OutFile $Destination
-
-            #Downloading PDF's
-            # Retrieve the HTML content of the website
-            $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/76cdef97-2774-4b11-9adb-14b0220159f5"
-            # Extract the text content from the parsed HTML
-            $text = $response.ParsedHtml.body.innerText
-            
-            'Downloading Restore Default PDF...'
-
-            $Destination = "C:\Temp\Restore Default.pdf" 
-            Invoke-WebRequest -Uri $text -OutFile $Destination
-
-            # Retrieve the HTML content of the website
-            $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/e5a5d996-6a66-400b-a2c7-548627642815"
-            # Extract the text content from the parsed HTML
-            $text = $response.ParsedHtml.body.innerText
-            
-            'Downloading ScanX_Config_Codebar PDF...'
-
-            $Destination = "C:\Temp\ScanX_Config_Codebar.pdf" 
-            Invoke-WebRequest -Uri $text -OutFile $Destination
-
-            "Launching Hands Free Scanner installer..."
-            Start-Process -FilePath "C:\Temp\Zebra123_CoreScanner_Driver.exe"
-            "Success!"
-
-        }
-
-        if($MenuChoice -eq 15){
-            
-            'Parsing download site...'
-
-            # Retrieve the HTML content of the website
-            $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/7ebdd547-4c3c-4dc4-8639-e0ce88c1f60c"
-            # Extract the text content from the parsed HTML
-            $text = $response.ParsedHtml.body.innerText
-            
-            'Downloading...'
-
-            $Destination = "C:\Temp\Primera.2.3.1.exe" 
-            Invoke-WebRequest -Uri $text -OutFile $Destination
-
-            "Launching LX 500 installer..."
-            Start-Process -FilePath "C:\Temp\Primera.2.3.1.exe"
-            "Success!"
-
-        }
-        if($MenuChoice -eq 16){
-            
-            'Parsing download site...'
-
-            # Retrieve the HTML content of the website
-            $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/1ab37806-4228-4eb1-8178-1ba492b0ea0f"
-            # Extract the text content from the parsed HTML
-            $text = $response.ParsedHtml.body.innerText
-            
-            'Downloading...'
-
-            $Destination = "C:\Temp\DCDSetup1.4.5.1.exe" 
-            Invoke-WebRequest -Uri $text -OutFile $Destination
-
-            "Launching DYMO 550 driver installer..."
-            Start-Process -FilePath "C:\Temp\DCDSetup1.4.5.1.exe"
-            "Success!"
-
-        }
-
-        if($MenuChoice -eq 17){
-            
-            'Parsing download site...'
-
-            # Retrieve the HTML content of the website
-            $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/2f89909d-4539-446b-a76c-1ff7f47954aa"
-            # Extract the text content from the parsed HTML
-            $text = $response.ParsedHtml.body.innerText
-            
-            'Downloading...'
-
-            $Destination = "C:\Temp\DCDSetup1.3.2.18.exe" 
-            Invoke-WebRequest -Uri $text -OutFile $Destination
-
-            "Launching DYMO 450 driver installer..."
-            Start-Process -FilePath "C:\Temp\DCDSetup1.3.2.18.exe"
-            "Success!"
-
-        }
-
-        if($MenuChoice -eq 18){
-            
-            'Parsing download site...'
-
-            # Retrieve the HTML content of the website
-            $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/2923c379-b7a0-4506-9c28-4ea5b2c0e48c"
-            # Extract the text content from the parsed HTML
-            $text = $response.ParsedHtml.body.innerText
-            
-            'Downloading...'
-
-            $Destination = "C:\Temp\zd51.exe" 
-            Invoke-WebRequest -Uri $text -OutFile $Destination
-
-            "Launching GK420d driver installer..."
-            Start-Process -FilePath "C:\Temp\zd51.exe"
-            "Success!"
-
-        }
-
-        if($MenuChoice -eq 19){
-            
-            'Parsing download site...'
-
-            # Retrieve the HTML content of the website
-            $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/56bbaadf-adb3-4a2b-875b-68dac3bb2489"
-            # Extract the text content from the parsed HTML
-            $text = $response.ParsedHtml.body.innerText
-            
-            'Downloading...'
-
-            $Destination = "C:\Temp\zd.exe" 
-            Invoke-WebRequest -Uri $text -OutFile $Destination
-
-            "Launching GC420d driver installer..."
-            Start-Process -FilePath "C:\Temp\zd.exe"
-            "Success!"
-
-        }
-
-        if($MenuChoice -eq 20){
-            
-            'Parsing download site...'
-
-            # Retrieve the HTML content of the website
-            $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/75b8f783-51f0-4a8a-9128-bf6957480aa4"
-            # Extract the text content from the parsed HTML
-            $text = $response.ParsedHtml.body.innerText
-            
-            'Downloading...'
-
-            $Destination = "C:\Temp\zd105.exe" 
-            Invoke-WebRequest -Uri $text -OutFile $Destination
-
-            "Launching ZD421/420 driver installer..."
-            Start-Process -FilePath "C:\Temp\zd105.exe"
-            "Success!"
-
-        }
-
-        if($MenuChoice -eq 21){
-            
-            'Parsing download site...'
-
-            # Retrieve the HTML content of the website
-            $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/7cc7f865-5107-4f8b-9f3e-617b8ca23802"
-            # Extract the text content from the parsed HTML
-            $text = $response.ParsedHtml.body.innerText
-            
-            'Downloading...'
-
-            $Destination = "C:\Temp\ZXP73.0.2.exe" 
-            Invoke-WebRequest -Uri $text -OutFile $Destination
-
-            "Launching ZXP-7 driver installer..."
-            Start-Process -FilePath "C:\Temp\ZXP73.0.2.exe"
-            "Success!"
-
-        }
-
-        if($MenuChoice -eq 22){
-            
+            Console-Reset
             "Manually input the old port number"
             $content = Get-Content "C:\Program Files (x86)\MS Shift Inc\MS Shift DevicesAPI\MSShift.DevicesAPI.exe.config"
             'Current API Port #: '
@@ -484,170 +497,288 @@ while($MenuChoice -ne 'X'){
             "Changed API port to: $newPort"
 
         }
-        if($MenuChoice -eq 23){
+        if($MenuChoice -eq 12){
+            Console-Reset
             'Launching print server'
             rundll32 printui.dll, PrintUIEntry /s 
 
         }
 
-        if($MenuChoice -eq 24){
+        if($MenuChoice -eq 13){
 
-        $regContent = @"
+            Console-Reset
 
-        Windows Registry Editor Version 5.00
-        ;Disable IE11 Welcome Screen
-        [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Internet Explorer\Main]
-        "DisableFirstRunCustomize"=dword:00000001 
+            $regContent = @"
+            Windows Registry Editor Version 5.00
+            ;Disable IE11 Welcome Screen
+            [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Internet Explorer\Main]
+            "DisableFirstRunCustomize"=dword:00000001 
 "@
 
-        # Create a temporary .reg file
-        $tempFile = New-TemporaryFile
-        $tempFile.FullName
-        $regContent | Out-File -FilePath $tempFile.FullName -Encoding ASCII
+            # Create a temporary .reg file
+            $tempFile = New-TemporaryFile 
+            $tempFile.FullName 
+            $regContent | Out-File -FilePath $tempFile.FullName -Encoding ASCII
 
-        # Import the registry settings
-        reg.exe import $tempFile.FullName
+            # Import the registry settings
+            reg.exe import $tempFile.FullName
 
-        # Clean up the temporary file
-        Remove-Item $tempFile.FullName           
+            # Clean up the temporary file
+            Remove-Item $tempFile.FullName           
 
         }
 
-        if($MenuChoice -eq 25){
+        if($MenuChoice -eq 14){          
 
-            '1.API'
-            '2.Adobe'
-            '3.Signature Pad'
-            '4.HF Scanner (DS8101)'
-            '5.HF Scanner (DS6707)'
-            '6.LX 500'
-            '7.DYMO 550'
-            '8.DYMO 450'
-            '9.GK420d'
-            '10.ZD421/420'
-            '11.ZXP-7'
+            MenuMaker -Selections 'API', 
+            'Adobe', 
+            'Signature Pad', 
+            'HF Scanner (DS8101) + PDFs',
+            'HF Scanner (DS6707) + PDFs',
+            'LX 500 driver',
+            'DYMO 550 driver',
+            'DYMO 450 driver',
+            'GK420d driver',
+            'ZD421/420 driver',
+            'ZXP-7 driver' -Title 'Choose a Driver' -IncludeExit
 
-            $driverChoice = Read-Host "Please Choose a Driver"  
+            $CopyLink = Read-Host "Please Choose a Driver"  
          
-            if($driverChoice -eq 1){
+            While($CopyLink -ne 'X'){
+            
+                if($CopyLink -eq 1){
 
-                # Retrieve the HTML content of the website
-                $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/e2d06108-8cc8-4705-a316-54463dc1d78f"
-                # Extract the text content from the parsed HTML
-                $text = $response.ParsedHtml.body.innerText
-                Set-Clipboard -Value "$text"
-                'Driver download link copied to clipboard'
-                'Exiting Driver Selection...'
-            }
-            if($driverChoice -eq 2){
+                    # Retrieve the HTML content of the website
+                    $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/e2d06108-8cc8-4705-a316-54463dc1d78f"
+                    # Extract the text content from the parsed HTML
+                    $text = $response.ParsedHtml.body.innerText
+                    Set-Clipboard -Value "$text"
+                    'Driver download link copied to clipboard'
+                    
+                }
+                if($CopyLink -eq 2){
 
-                # Retrieve the HTML content of the website
-                $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/5da99203-21ba-4aa2-93e6-a60a8a0b3ae3"
-                # Extract the text content from the parsed HTML
-                $text = $response.ParsedHtml.body.innerText
-                Set-Clipboard -Value "$text"
-                'Driver download link copied to clipboard'
-                'Exiting Driver Selection...'
-            }
-            if($driverChoice -eq 3){
+                    # Retrieve the HTML content of the website
+                    $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/5da99203-21ba-4aa2-93e6-a60a8a0b3ae3"
+                    # Extract the text content from the parsed HTML
+                    $text = $response.ParsedHtml.body.innerText
+                    Set-Clipboard -Value "$text"
+                    'Driver download link copied to clipboard'
+                    
+                }
+                if($CopyLink -eq 3){
 
-                # Retrieve the HTML content of the website
-                $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/e43d957b-0b20-4422-a3d0-a114162c5dfe"
-                # Extract the text content from the parsed HTML
-                $text = $response.ParsedHtml.body.innerText
-                Set-Clipboard -Value "$text"
-                'Driver download link copied to clipboard'
-                'Exiting Driver Selection...'
-            }
+                    # Retrieve the HTML content of the website
+                    $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/e43d957b-0b20-4422-a3d0-a114162c5dfe"
+                    # Extract the text content from the parsed HTML
+                    $text = $response.ParsedHtml.body.innerText
+                    Set-Clipboard -Value "$text"
+                    'Driver download link copied to clipboard'
+                    
+                }
 
-            if($driverChoice -eq 4){
+                if($CopyLink -eq 4){
 
-                # Retrieve the HTML content of the website
-                $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/30ce8450-e037-4228-8987-432968180d43"
-                # Extract the text content from the parsed HTML
-                $text = $response.ParsedHtml.body.innerText
-                Set-Clipboard -Value "$text"
-                'Driver download link copied to clipboard'
-                'Exiting Driver Selection...'
-            }
+                    # Retrieve the HTML content of the website
+                    $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/30ce8450-e037-4228-8987-432968180d43"
+                    # Extract the text content from the parsed HTML
+                    $text = $response.ParsedHtml.body.innerText
+                    Set-Clipboard -Value "$text"
+                    'Driver download link copied to clipboard'
+                    
+                }
 
-            if($driverChoice -eq 5){
+                if($CopyLink -eq 5){
 
-                # Retrieve the HTML content of the website
-                $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/30ce8450-e037-4228-8987-432968180d43"
-                # Extract the text content from the parsed HTML
-                $text = $response.ParsedHtml.body.innerText
-                Set-Clipboard -Value "$text"
-                'Driver download link copied to clipboard'
-                'Exiting Driver Selection...'
-            }
+                    # Retrieve the HTML content of the website
+                    $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/30ce8450-e037-4228-8987-432968180d43"
+                    # Extract the text content from the parsed HTML
+                    $text = $response.ParsedHtml.body.innerText
+                    Set-Clipboard -Value "$text"
+                    'Driver download link copied to clipboard'
+                    
+                }
 
-            if($driverChoice -eq 6){
+                if($CopyLink -eq 6){
 
-                # Retrieve the HTML content of the website
-                $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/7ebdd547-4c3c-4dc4-8639-e0ce88c1f60c"
-                # Extract the text content from the parsed HTML
-                $text = $response.ParsedHtml.body.innerText
-                Set-Clipboard -Value "$text"
-                'Driver download link copied to clipboard'
-                'Exiting Driver Selection...'
-            }
-            if($driverChoice -eq 7){
+                    # Retrieve the HTML content of the website
+                    $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/7ebdd547-4c3c-4dc4-8639-e0ce88c1f60c"
+                    # Extract the text content from the parsed HTML
+                    $text = $response.ParsedHtml.body.innerText
+                    Set-Clipboard -Value "$text"
+                    'Driver download link copied to clipboard'
+                    
+                }
+                if($CopyLink -eq 7){
 
-                # Retrieve the HTML content of the website
-                $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/1ab37806-4228-4eb1-8178-1ba492b0ea0f"
-                # Extract the text content from the parsed HTML
-                $text = $response.ParsedHtml.body.innerText
-                Set-Clipboard -Value "$text"
-                'Driver download link copied to clipboard'
-                'Exiting Driver Selection...'
-            }
-            if($driverChoice -eq 8){
+                    # Retrieve the HTML content of the website
+                    $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/1ab37806-4228-4eb1-8178-1ba492b0ea0f"
+                    # Extract the text content from the parsed HTML
+                    $text = $response.ParsedHtml.body.innerText
+                    Set-Clipboard -Value "$text"
+                    'Driver download link copied to clipboard'
+                    
+                }
+                if($CopyLink -eq 8){
 
-                # Retrieve the HTML content of the website
-                $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/2f89909d-4539-446b-a76c-1ff7f47954aa"
-                # Extract the text content from the parsed HTML
-                $text = $response.ParsedHtml.body.innerText
-                Set-Clipboard -Value "$text"
-                'Driver download link copied to clipboard'
-                'Exiting Driver Selection...'
-            }
+                    # Retrieve the HTML content of the website
+                    $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/2f89909d-4539-446b-a76c-1ff7f47954aa"
+                    # Extract the text content from the parsed HTML
+                    $text = $response.ParsedHtml.body.innerText
+                    Set-Clipboard -Value "$text"
+                    'Driver download link copied to clipboard'
+                    
+                }
 
-            if($driverChoice -eq 9){
+                if($CopyLink -eq 9){
 
-                # Retrieve the HTML content of the website
-                $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/2923c379-b7a0-4506-9c28-4ea5b2c0e48c"
-                # Extract the text content from the parsed HTML
-                $text = $response.ParsedHtml.body.innerText
-                Set-Clipboard -Value "$text"
-                'Driver download link copied to clipboard'
-                'Exiting Driver Selection...'
-            }
+                    # Retrieve the HTML content of the website
+                    $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/2923c379-b7a0-4506-9c28-4ea5b2c0e48c"
+                    # Extract the text content from the parsed HTML
+                    $text = $response.ParsedHtml.body.innerText
+                    Set-Clipboard -Value "$text"
+                    'Driver download link copied to clipboard'
+                    
+                }
 
-            if($driverChoice -eq 10){
+                if($CopyLink -eq 10){
 
-                # Retrieve the HTML content of the website
-                $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/75b8f783-51f0-4a8a-9128-bf6957480aa4"
-                # Extract the text content from the parsed HTML
-                $text = $response.ParsedHtml.body.innerText
-                Set-Clipboard -Value "$text"
-                'Driver download link copied to clipboard'
-                'Exiting Driver Selection...'
-            }
-            if($driverChoice -eq 11){
+                    # Retrieve the HTML content of the website
+                    $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/75b8f783-51f0-4a8a-9128-bf6957480aa4"
+                    # Extract the text content from the parsed HTML
+                    $text = $response.ParsedHtml.body.innerText
+                    Set-Clipboard -Value "$text"
+                    'Driver download link copied to clipboard'
+                    
+                }
+                if($CopyLink -eq 11){
                 
-                # Retrieve the HTML content of the website
-                $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/7cc7f865-5107-4f8b-9f3e-617b8ca23802"
-                # Extract the text content from the parsed HTML
-                $text = $response.ParsedHtml.body.innerText
-                Set-Clipboard -Value "$text"
-                'Driver download link copied to clipboard'
-                'Exiting Driver Selection...'
+                    # Retrieve the HTML content of the website
+                    $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/7cc7f865-5107-4f8b-9f3e-617b8ca23802"
+                    # Extract the text content from the parsed HTML
+                    $text = $response.ParsedHtml.body.innerText
+                    Set-Clipboard -Value "$text"
+                    'Driver download link copied to clipboard'
+                    
+                }
+
+            $CopyLink = Read-Host "Choose another download menu option" 
             }
+        }
+
+        if($MenuChoice -eq 15){
+            Console-Reset
+            'Removing the Document.pdf (existing badge PDF)'
+            Remove-Item "C:\Temp\Document.pdf" -Confirm
+            'PDF deleted!'
+
         }
         
-    $MenuChoice = Read-Host "Choose another menu option"
+        if($MenuChoice -eq 16){
+            Console-Reset
+            'Removing all drivers...'
 
+            if(Test-Path "C:\Temp\api.zip" ){
+                 Remove-Item "C:\Temp\api.zip"
+                'API files deleted!'
+            }
+
+            if(Test-Path "C:\Temp\MSShift.DevicesAPI.Setup.NEW.msi"){
+                 Remove-Item "C:\Temp\MSShift.DevicesAPI.Setup.NEW.msi"
+            }
+
+            if(Test-Path "C:\Temp\adobe.exe"){
+                 Remove-Item "C:\Temp\adobe.exe"
+                 'Adobe files removed!'
+            }
+
+            if(Test-Path "C:\Temp\sigplus_.exe"){
+                 Remove-Item "C:\Temp\sigplus_.exe"
+                 'Signature Pads files removed!'
+            }
+
+            if(Test-Path "C:\Temp\Zebra_CoreScanner_Driver.exe"){
+                 Remove-Item "C:\Temp\Zebra_CoreScanner_Driver.exe"
+                 'Scanner files removed!'
+            }
+
+            if(Test-Path "C:\Temp\Restore Default.pdf"){
+                 Remove-Item "C:\Temp\Restore Default.pdf"
+                 'PDFs Removed!'
+            }
+
+            if(Test-Path "C:\Temp\ScanX_Config_Codebar.pdf"){
+                 Remove-Item "C:\Temp\ScanX_Config_Codebar.pdf"
+            }
+
+            if(Test-Path "C:\Temp\Zebra123_CoreScanner_Driver.exe" ){
+                 Remove-Item "C:\Temp\Zebra123_CoreScanner_Driver.exe"
+                 'Scanner files removed!'
+            }
+
+            if(Test-Path "C:\Temp\Primera.2.3.1.exe"){
+                 Remove-Item "C:\Temp\Primera.2.3.1.exe"  
+                 'LX 500 files removed!'
+            }
+
+            if(Test-Path "C:\Temp\DCDSetup1.4.5.1.exe"){
+                 Remove-Item "C:\Temp\DCDSetup1.4.5.1.exe"
+                 'DYMO files removed!'  
+            }
+
+            
+            if(Test-Path "C:\Temp\DCDSetup1.3.2.18.exe"){
+                 Remove-Item "C:\Temp\DCDSetup1.3.2.18.exe"  
+                 'DYMO files removed!'
+            }
+                        
+            if(Test-Path "C:\Temp\zd51.exe"){
+                 Remove-Item "C:\Temp\zd51.exe"  
+                 'ZD files removed!'
+            }
+
+            if(Test-Path "C:\Temp\zd.exe"){
+                 Remove-Item "C:\Temp\zd.exe"  
+                 'ZD files removed!'
+            }
+
+            if(Test-Path "C:\Temp\zd105.exe"){
+                 Remove-Item "C:\Temp\zd105.exe" 
+                 'ZD files removed!' 
+            }
+
+            if(Test-Path "C:\Temp\ZXP73.0.2.exe"){
+                 Remove-Item "C:\Temp\ZXP73.0.2.exe"  
+                 'ZXP-7 files removed!'
+            }
+            'Temp folder cleaned!'
+
+        }
+
+        if($MenuChoice -eq 17){
+            
+            Console-Reset
+
+            # Check service status
+            sc.exe query wuauserv
+
+            # Stop process in case it is running
+
+            sc.exe stop wuauserv
+
+            # Set service to disabled
+            sc.exe config wuauserv start=disabled
+
+            'Start Value should be 0x4 if really disabled'
+            REG.exe QUERY HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\wuauserv /v Start
+
+            # Disabled scheduled task
+            'Disable scheduled task'
+            Get-ScheduledTask -TaskPath '\Microsoft\Windows\WindowsUpdate\'  | Disable-ScheduledTask -ErrorAction SilentlyContinue
+        }
+
+    $MenuChoice = Read-Host "Choose another function menu option"
 }
 
-Write-Output "Exiting Powershell..."
+Write-Output "Goodbye!"
+Start-Sleep -Seconds 2
