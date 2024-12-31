@@ -1,4 +1,4 @@
-﻿# Created By Adam Waszczyszak
+# Created By Adam Waszczyszak
 $host.ui.RawUI.WindowTitle = “MSShell by Adam Waszczyszak”
 # Scripts Disabled Bypass from CMD: powershell -ExecutionPolicy Bypass -File "C:\Temp\MSShell.ps1"
 
@@ -20,7 +20,7 @@ if ((Test-Admin) -eq $false)  {
 }
 
 # Clear Screen after admin check
-cls
+Clear-Host
 
 # Menu from StackOverflow
 Function MenuMaker{
@@ -54,23 +54,24 @@ Function MenuMaker{
 
 # Function for the Menu creation
 function Print-Menu{
-    MenuMaker -Selections 'Create Temp and Visitor_pics Folders',
-    'Set Temp and Visitor_Pics Permissions', 
-    'Set PTI Folder Permissions',
-    'Block DYMO Updates', 
-    'Block Adobe Auto-Update Service', 
-    'Stop Print Spooler', 
-    'Restart Print Spooler', 
-    'Delete all print jobs on PC', 
-    'Install Drivers via elevated path', 
-    'Driver download and install menu',
-    'Change API Port', 
-    'Launch Print Server', 
-    'Microsoft Edge Registry Patch (Edge Engine Error)', 
-    'Create Download Links and set Clip Board',
-    'Delete existing badge PDF',
-    'Delete drivers from Temp',
-    'Disable Windows Updates' -Title 'Choose a Function' -IncludeExit
+    MenuMaker -Selections 'Create Temp and Visitor_pics Folders', #1
+    'Set Temp and Visitor_Pics Permissions', #2
+    'Set PTI Folder Permissions', #3
+    'Block DYMO Updates', #4
+    'Block Adobe Auto-Update Service', #5 
+    'Stop Print Spooler', #6
+    'Restart Print Spooler', #7 
+    'Delete all print jobs on PC', #8 
+    'Install Drivers via elevated path', #9 
+    'Driver download and install menu', #10
+    'Change API Port', #11
+    'Launch Print Server', #12
+    'Microsoft Edge Registry Patch (Edge Engine Error)', #13
+    'Create Download Links and set Clip Board', #14
+    'Delete existing badge PDF', #15
+    'Delete drivers from Temp', #16
+    'Disable Windows Updates', #17
+    'Silent Install Menu' -Title 'Choose a Function (Type "menu" to reload)' -IncludeExit
 }
 
 Print-Menu
@@ -84,6 +85,10 @@ function Console-Reset{
 $MenuChoice = Read-Host "Choose an option"
 
 while($MenuChoice -ne 'X'){
+
+    if($MenuChoice -eq "menu"){
+            Print-Menu
+    }
 
     if($MenuChoice -eq 'X'){
         Write-Output "Exiting Menu..."
@@ -179,7 +184,7 @@ while($MenuChoice -ne 'X'){
         }
 
         if($MenuChoice -eq 10){
-            cls
+            Clear-Host
             MenuMaker -Selections 'Download and Install API', 
             'Download and Install Adobe', 
             'Download and Install Signature Pad', 
@@ -262,7 +267,7 @@ while($MenuChoice -ne 'X'){
                 'Parsing download site...'
                 # Download HF driver
                 # Retrieve the HTML content of the website
-                $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/30ce8450-e037-4228-8987-432968180d43"
+                $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/c862d6fc-fc72-4e77-8347-ab079c8d4fa3"
                 # Extract the text content from the parsed HTML
                 $text = $response.ParsedHtml.body.innerText
             
@@ -580,7 +585,7 @@ while($MenuChoice -ne 'X'){
                 if($CopyLink -eq 4){
 
                     # Retrieve the HTML content of the website
-                    $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/30ce8450-e037-4228-8987-432968180d43"
+                    $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/c862d6fc-fc72-4e77-8347-ab079c8d4fa3"
                     # Extract the text content from the parsed HTML
                     $text = $response.ParsedHtml.body.innerText
                     Set-Clipboard -Value "$text"
@@ -591,7 +596,7 @@ while($MenuChoice -ne 'X'){
                 if($CopyLink -eq 5){
 
                     # Retrieve the HTML content of the website
-                    $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/30ce8450-e037-4228-8987-432968180d43"
+                    $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/c862d6fc-fc72-4e77-8347-ab079c8d4fa3"
                     # Extract the text content from the parsed HTML
                     $text = $response.ParsedHtml.body.innerText
                     Set-Clipboard -Value "$text"
@@ -777,8 +782,192 @@ while($MenuChoice -ne 'X'){
             Get-ScheduledTask -TaskPath '\Microsoft\Windows\WindowsUpdate\'  | Disable-ScheduledTask -ErrorAction SilentlyContinue
         }
 
+        if($MenuChoice -eq 18){
+            Clear-Host
+            MenuMaker -Selections 'Download and Install API', #1
+            'Download and Install Adobe',  #2
+            'Download and Install HF Scanner (DS8101) + PDFs', #3
+            'Download and Install HF Scanner (DS6707) + PDFs', #4
+            'Download and Install DYMO 550 driver', #5
+            'Download and Install DYMO 450 driver' -Title 'Choose a silent download and install menu option' -IncludeExit
+
+            $SilentPick = Read-Host "Choose a download menu option"
+
+            while($SilentPick -ne 'X'){
+
+            if($SilentPick -eq 1){
+            
+                'Parsing download site...'
+            
+                # Retrieve the HTML content of the website
+                $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/e2d06108-8cc8-4705-a316-54463dc1d78f"
+                # Extract the text content from the parsed HTML
+                $text = $response.ParsedHtml.body.innerText
+
+                'Downloading...'
+                   
+                $Destination = "C:\Temp\api.zip" 
+                Invoke-WebRequest -Uri $text -OutFile $Destination
+                'Uncompressing...'
+                Expand-Archive -LiteralPath 'C:\Temp\api.zip' -DestinationPath C:\Temp
+                "Launching API with silent installer params..."
+                Start-Process -FilePath "C:\Temp\MSShift.DevicesAPI.Setup.NEW.msi" -ArgumentList "/passive", "/norestart"
+                "Success!"
+
+            }
+
+             if($SilentPick -eq 2){
+            
+                'Parsing download site...'
+
+                # Retrieve the HTML content of the website
+                $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/5da99203-21ba-4aa2-93e6-a60a8a0b3ae3"
+                # Extract the text content from the parsed HTML
+                $text = $response.ParsedHtml.body.innerText
+            
+                'Downloading...'
+
+                $Destination = "C:\Temp\adobe.exe" 
+                Invoke-WebRequest -Uri $text -OutFile $Destination
+
+                "Launching Adobe with silent installer params..."
+                Start-Process -FilePath "C:\Temp\adobe.exe" -ArgumentList -sAll
+                "Success!"
+
+        }
+
+            if($SilentPick -eq 3){
+            
+                'Parsing download site...'
+                # Download HF driver
+                # Retrieve the HTML content of the website
+                $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/c862d6fc-fc72-4e77-8347-ab079c8d4fa3"
+                # Extract the text content from the parsed HTML
+                $text = $response.ParsedHtml.body.innerText
+            
+                'Downloading driver...'
+
+                $Destination = "C:\Temp\Zebra_CoreScanner_Driver.exe" 
+                Invoke-WebRequest -Uri $text -OutFile $Destination
+
+                #Downloading PDF's
+                # Retrieve the HTML content of the website
+                $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/76cdef97-2774-4b11-9adb-14b0220159f5"
+                # Extract the text content from the parsed HTML
+                $text = $response.ParsedHtml.body.innerText
+            
+                'Downloading Restore Default PDF...'
+
+                $Destination = "C:\Temp\Restore Default.pdf" 
+                Invoke-WebRequest -Uri $text -OutFile $Destination
+
+                # Retrieve the HTML content of the website
+                $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/e5a5d996-6a66-400b-a2c7-548627642815"
+                # Extract the text content from the parsed HTML
+                $text = $response.ParsedHtml.body.innerText
+            
+                'Downloading ScanX_Config_Codebar PDF...'
+
+                $Destination = "C:\Temp\ScanX_Config_Codebar.pdf" 
+                Invoke-WebRequest -Uri $text -OutFile $Destination
+
+                "Launching Hands Free Scanner with silent installer params..."
+                Start-Process -FilePath "C:\Temp\Zebra_CoreScanner_Driver.exe" -ArgumentList "/S", "/v/qn"
+                "Success!"
+
+            }
+
+            if($SilentPick -eq 4){
+            
+                'Parsing download site...'
+                # Download HF driver
+                # Retrieve the HTML content of the website
+                $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/be6e546f-2bff-4547-ad52-a13442f9a53f"
+                # Extract the text content from the parsed HTML
+                $text = $response.ParsedHtml.body.innerText
+            
+                'Downloading driver...'
+
+                $Destination = "C:\Temp\Zebra123_CoreScanner_Driver.exe" 
+                Invoke-WebRequest -Uri $text -OutFile $Destination
+
+                #Downloading PDF's
+                # Retrieve the HTML content of the website
+                $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/76cdef97-2774-4b11-9adb-14b0220159f5"
+                # Extract the text content from the parsed HTML
+                $text = $response.ParsedHtml.body.innerText
+            
+                'Downloading Restore Default PDF...'
+
+                $Destination = "C:\Temp\Restore Default.pdf" 
+                Invoke-WebRequest -Uri $text -OutFile $Destination
+
+                # Retrieve the HTML content of the website
+                $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/e5a5d996-6a66-400b-a2c7-548627642815"
+                # Extract the text content from the parsed HTML
+                $text = $response.ParsedHtml.body.innerText
+            
+                'Downloading ScanX_Config_Codebar PDF...'
+
+                $Destination = "C:\Temp\ScanX_Config_Codebar.pdf" 
+                Invoke-WebRequest -Uri $text -OutFile $Destination
+
+                "Launching Hands Free Scanner with silent installer params..."
+                Start-Process -FilePath "C:\Temp\Zebra123_CoreScanner_Driver.exe" -ArgumentList "/S", "/v/qn"
+                "Success!"
+
+            }
+
+            if($SilentPick -eq 5){
+            
+                'Parsing download site...'
+
+                # Retrieve the HTML content of the website
+                $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/1ab37806-4228-4eb1-8178-1ba492b0ea0f"
+                # Extract the text content from the parsed HTML
+                $text = $response.ParsedHtml.body.innerText
+            
+                'Downloading...'
+
+                $Destination = "C:\Temp\DCDSetup1.4.5.1.exe" 
+                Invoke-WebRequest -Uri $text -OutFile $Destination
+
+                "Launching DYMO 550 driver with silent installer params..."
+                Start-Process -FilePath "C:\Temp\DCDSetup1.4.5.1.exe" -ArgumentList "/S", "/v/qn"
+                "Success!"
+
+            }
+
+            if($SilentPick -eq 6){
+            
+                'Parsing download site...'
+
+                # Retrieve the HTML content of the website
+                $response = Invoke-WebRequest -Uri "https://download.msshift.com/link/2f89909d-4539-446b-a76c-1ff7f47954aa"
+                # Extract the text content from the parsed HTML
+                $text = $response.ParsedHtml.body.innerText
+            
+                'Downloading...'
+
+                $Destination = "C:\Temp\DCDSetup1.3.2.18.exe" 
+                Invoke-WebRequest -Uri $text -OutFile $Destination
+
+                "Launching DYMO 450 driver with silent installer params..."
+                Start-Process -FilePath "C:\Temp\DCDSetup1.3.2.18.exe" -ArgumentList "/S", "/v/qn"
+                "Success!"
+
+            }
+
+            $SilentPick = Read-Host "Choose another download menu option" 
+                
+            }
+            Print-Menu
+        }
+
     $MenuChoice = Read-Host "Choose another function menu option"
+
 }
+Print-Menu
 
 Write-Output "Goodbye!"
 Start-Sleep -Seconds 2
