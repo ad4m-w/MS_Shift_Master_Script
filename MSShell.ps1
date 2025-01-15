@@ -1,9 +1,14 @@
 # Created By Adam Waszczyszak
+# Version 1.5
+
+# TODO: 
+# Un-hardcode directories as to prevent issues
+
 $host.ui.RawUI.WindowTitle = “MSShell by Adam Waszczyszak”
 # Scripts Disabled Bypass from CMD: powershell -ExecutionPolicy Bypass -File "C:\Temp\MSShell.ps1"
+# Might need to update local group policy if the bypass does not work.
 
 # Self-check for admin rights, and ask for perms if launched not as admin (from Superuser.com)
-#param([switch]$Elevated)
 
 function Test-Admin {
     $currentUser = New-Object Security.Principal.WindowsPrincipal $([Security.Principal.WindowsIdentity]::GetCurrent())
@@ -52,6 +57,9 @@ Function MenuMaker{
     $menu
 }
 
+# Disable download progress bar increases download speed significantly.
+$ProgressPreference = 'SilentlyContinue'
+
 # Function for the Menu creation
 function Print-Menu{
     MenuMaker -Selections 'Create Temp and Visitor_pics Folders', #1
@@ -71,14 +79,15 @@ function Print-Menu{
     'Delete existing badge PDF', #15
     'Delete drivers from Temp', #16
     'Disable Windows Updates', #17
-    'Silent Install Menu' -Title 'Choose a Function (Type "menu" to reload)' -IncludeExit
+    'Silent Install Menu', #18
+    'Create silent print queue deletion task.' -Title 'Choose a Function (Type "menu" to reload)' -IncludeExit
 }
 
 Print-Menu
 
 # Function to reset console per command
 function Console-Reset{
-    cls
+    Clear-Host
     Print-Menu
 }
 
@@ -87,7 +96,7 @@ $MenuChoice = Read-Host "Choose an option"
 while($MenuChoice -ne 'X'){
 
     if($MenuChoice -eq "menu"){
-            Print-Menu
+            Console-Reset
     }
 
     if($MenuChoice -eq 'X'){
@@ -212,7 +221,6 @@ while($MenuChoice -ne 'X'){
                 $text = $response.ParsedHtml.body.innerText
 
                 'Downloading...'
-                   
                 $Destination = "C:\Temp\api.zip" 
                 Invoke-WebRequest -Uri $text -OutFile $Destination
                 'Uncompressing...'
@@ -964,9 +972,44 @@ while($MenuChoice -ne 'X'){
             Print-Menu
         }
 
+        if($MenuChoice -eq 19){
+
+# Contents of the batch and VBS file. 
+
+$batchContent = @"
+@echo off
+net stop spooler
+ping -n 4 127.0.0.1 > nul 
+echo Deleting Print Queue...
+del %systemroot%\System32\spool\printers\* /Q
+echo Queue Deleted.
+net start spooler
+"@
+
+$vbsContent = @"
+CreateObject("Wscript.Shell").Run "C:\Temp\QueueDeletion.bat",0,True
+"@
+
+        $batchFilePath = "C:\Temp\QueueDeletion.bat"
+        $batchContent | Out-File -FilePath $batchFilePath -Encoding ascii
+        "Batch File created in Temp folder..."
+
+        "Creating VBS for silent launch..."
+        $vbsFilePath = "C:\Temp\QueueDeletion.vbs"
+        $vbsContent | Out-File -FilePath $vbsFilePath -Encoding ascii
+        "VBS File created in Temp folder..."
+
+        "Creating Scheduled Task..."
+        $action = New-ScheduledTaskAction -Execute "C:\Temp\QueueDeletion.vbs"
+        $trigger = New-ScheduledTaskTrigger -Daily -At 11:30AM
+        Register-ScheduledTask -TaskName "Print Queue Deletion Task" -Action $action -Trigger $trigger -AsJob -Force -RunLevel Highest
+
+    }
+
     $MenuChoice = Read-Host "Choose another function menu option"
 
 }
+
 Print-Menu
 
 Write-Output "Goodbye!"
