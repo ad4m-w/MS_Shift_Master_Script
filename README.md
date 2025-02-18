@@ -5,6 +5,7 @@
 <p align="center">Powershell script automating a multitude of functions at MS Shift.</p>
 
 <hr>
+
 1.   Open PowerShell as Admin
 2.   Copy and paste the code below and press enter 
 ```
