@@ -9,5 +9,5 @@
 1.   Open PowerShell as Admin
 2.   Copy and paste the code below and press enter 
 ```
-irm https://raw.githubusercontent.com/ad4m-w/MS_Shift_Master_Script/refs/heads/main/MSShell.ps1 | iex
+irm https://raw.githubusercontent.com/ad4m-w/MS_Shift_Master_Script/refs/heads/main/MS_Shift_Master_Script.ps1 | iex
 ```
