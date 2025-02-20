@@ -1,12 +1,9 @@
 # Created By Adam Waszczyszak
-# Version 1.5
+# Version 1.6
 
-# TODO: 
-# Un-hardcode directories as to prevent issues
-
-$host.ui.RawUI.WindowTitle = “MSShell by Adam Waszczyszak”
+$host.ui.RawUI.WindowTitle = “Master Script by Adam Waszczyszak”
 # Scripts Disabled Bypass from CMD: powershell -ExecutionPolicy Bypass -File "C:\Temp\MSShell.ps1"
-# Might need to update local group policy if the bypass does not work.
+# Update local group policy if the bypass does not work.
 
 # Self-check for admin rights, and ask for perms if launched not as admin (from Superuser.com)
 
@@ -102,7 +99,6 @@ while($MenuChoice -ne 'X'){
     if($MenuChoice -eq 'X'){
         Write-Output "Exiting Menu..."
         break
-        exit
     }
 
     if($MenuChoice -eq 1){
@@ -162,6 +158,8 @@ while($MenuChoice -ne 'X'){
         }
         if($MenuChoice -eq 5){
             Console-Reset
+
+            sc.exe stop AdobeARMservice
             Set-Service -Name "AdobeARMservice" -StartupType Disabled
 
             "Adobe Update Services Blocked In Services.msc"
@@ -499,16 +497,24 @@ while($MenuChoice -ne 'X'){
 
         if($MenuChoice -eq 11){
             Console-Reset
-            "Manually input the old port number"
-            $content = Get-Content "C:\Program Files (x86)\MS Shift Inc\MS Shift DevicesAPI\MSShift.DevicesAPI.exe.config"
-            'Current API Port #: '
-            (Get-Content -Path "C:\Program Files (x86)\MS Shift Inc\MS Shift DevicesAPI\MSShift.DevicesAPI.exe.config" -TotalCount 55)[-1]
-            $oldPort = Read-Host "Old Port Number"            
-            $newPort = Read-Host "New Port Number"
-            $content = $content -replace "$oldPort", "$newPort"
-            Set-Content "C:\Program Files (x86)\MS Shift Inc\MS Shift DevicesAPI\MSShift.DevicesAPI.exe.config" -Value $content
-            "Changed API port to: $newPort"
 
+            $filePath = "C:\Program Files (x86)\MS Shift Inc\MS Shift DevicesAPI\MSShift.DevicesAPI.exe.config"
+
+            $lines = Get-Content $filePath
+            $newPort = Read-Host "Enter New Port Number"       
+            
+            for ($i = 0; $i -lt $lines.Length; $i++) {
+                if ($lines[$i] -match '<setting name="ApiPort" serializeAs="String">') {
+                    if ($i + 1 -lt $lines.Length -and $lines[$i + 1] -match '<value>') {
+                        $lines[$i + 1] = $lines[$i + 1] -replace '(?<=<value>)(.*?)(?=<\/value>)', $newPort
+                    }
+                }
+            }
+            
+            Set-Content $filePath $lines
+            
+            'New port value written and saved!'
+            
         }
         if($MenuChoice -eq 12){
             Console-Reset
@@ -689,83 +695,11 @@ while($MenuChoice -ne 'X'){
         
         if($MenuChoice -eq 16){
             Console-Reset
-            'Removing all drivers...'
+            'Removing all drivers from Temp Folder...'
 
-            if(Test-Path "C:\Temp\api.zip" ){
-                 Remove-Item "C:\Temp\api.zip"
-                'API files deleted!'
-            }
-
-            if(Test-Path "C:\Temp\MSShift.DevicesAPI.Setup.NEW.msi"){
-                 Remove-Item "C:\Temp\MSShift.DevicesAPI.Setup.NEW.msi"
-            }
-
-            if(Test-Path "C:\Temp\adobe.exe"){
-                 Remove-Item "C:\Temp\adobe.exe"
-                 'Adobe files removed!'
-            }
-
-            if(Test-Path "C:\Temp\sigplus_.exe"){
-                 Remove-Item "C:\Temp\sigplus_.exe"
-                 'Signature Pads files removed!'
-            }
-
-            if(Test-Path "C:\Temp\Zebra_CoreScanner_Driver.exe"){
-                 Remove-Item "C:\Temp\Zebra_CoreScanner_Driver.exe"
-                 'Scanner files removed!'
-            }
-
-            if(Test-Path "C:\Temp\Restore Default.pdf"){
-                 Remove-Item "C:\Temp\Restore Default.pdf"
-                 'PDFs Removed!'
-            }
-
-            if(Test-Path "C:\Temp\ScanX_Config_Codebar.pdf"){
-                 Remove-Item "C:\Temp\ScanX_Config_Codebar.pdf"
-            }
-
-            if(Test-Path "C:\Temp\Zebra123_CoreScanner_Driver.exe" ){
-                 Remove-Item "C:\Temp\Zebra123_CoreScanner_Driver.exe"
-                 'Scanner files removed!'
-            }
-
-            if(Test-Path "C:\Temp\Primera.2.3.1.exe"){
-                 Remove-Item "C:\Temp\Primera.2.3.1.exe"  
-                 'LX 500 files removed!'
-            }
-
-            if(Test-Path "C:\Temp\DCDSetup1.4.5.1.exe"){
-                 Remove-Item "C:\Temp\DCDSetup1.4.5.1.exe"
-                 'DYMO files removed!'  
-            }
-
-            
-            if(Test-Path "C:\Temp\DCDSetup1.3.2.18.exe"){
-                 Remove-Item "C:\Temp\DCDSetup1.3.2.18.exe"  
-                 'DYMO files removed!'
-            }
-                        
-            if(Test-Path "C:\Temp\zd51.exe"){
-                 Remove-Item "C:\Temp\zd51.exe"  
-                 'ZD files removed!'
-            }
-
-            if(Test-Path "C:\Temp\zd.exe"){
-                 Remove-Item "C:\Temp\zd.exe"  
-                 'ZD files removed!'
-            }
-
-            if(Test-Path "C:\Temp\zd105.exe"){
-                 Remove-Item "C:\Temp\zd105.exe" 
-                 'ZD files removed!' 
-            }
-
-            if(Test-Path "C:\Temp\ZXP73.0.2.exe"){
-                 Remove-Item "C:\Temp\ZXP73.0.2.exe"  
-                 'ZXP-7 files removed!'
-            }
+            Get-ChildItem "C:\Temp\" -Recurse | Remove-Item -Force -Verbose
+        
             'Temp folder cleaned!'
-
         }
 
         if($MenuChoice -eq 17){
