@@ -1003,7 +1003,7 @@ CreateObject("Wscript.Shell").Run "C:\Temp\QueueDeletion.bat",0,True
         $action = New-ScheduledTaskAction -Execute "C:\Temp\QueueDeletion.vbs"
         $trigger = New-ScheduledTaskTrigger -Daily -At 11:30AM
         Register-ScheduledTask -TaskName "Print Queue Deletion Task" -Action $action -Trigger $trigger -AsJob -Force -RunLevel Highest
-
+        "Print queue deletion task created!" 
     }
 
     $MenuChoice = Read-Host "Choose another function menu option"
